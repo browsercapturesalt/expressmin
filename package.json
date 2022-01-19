@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "express": "^4.17.2",
+    "nodemon": "^2.0.15",
+    "prettier": "^2.5.1",
+    "vue": "^3.2.27"
+  }
+}
