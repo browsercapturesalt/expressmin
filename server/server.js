@@ -38,7 +38,7 @@ utils.init().then((utilsInitOk) => {
     console.log(`${APP_NAME} listening at ${PORT}`);
   });
 
-  utils.getGitContent("/README.md").then((content) => {
-    console.log("blobs README.md", content);
-  });
+  /*utils.upsertGitContent("test", Buffer.from("test update")).then((result) => {
+    console.log(result);
+  });*/
 });

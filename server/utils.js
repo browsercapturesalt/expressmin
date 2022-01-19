@@ -2,11 +2,14 @@ const res = require("express/lib/response");
 const path = require("path");
 
 const { Octokit, App } = require("octokit");
+const { resolve } = require("path");
 
 const octokit = new Octokit({ auth: process.env.EXPRESSMIN_GITHUB_TOKEN });
 
 let gitUser = "browsercapturesalt";
-const gitRepo = "blobs" || process.env.BLOBS_REPO;
+const gitMail =
+  "browsercaptures@googlemail.com" || process.env.EXPRESSMIN_GIT_MAIL;
+const gitRepo = "blobs" || process.env.EXPRESSMIN_BLOBS_REPO;
 
 function init() {
   return new Promise((resolve) => {
@@ -46,6 +49,53 @@ function getGitContent(path) {
   return;
 }
 
+function createOrupdateGitContent(path, contentBuffer, sha) {
+  const content = contentBuffer.toString("base64");
+  const message = `Update ${path}`;
+  return new Promise((resolve) => {
+    try {
+      octokit.rest.repos
+        .createOrUpdateFileContents({
+          owner: gitUser,
+          repo: gitRepo,
+          path,
+          message,
+          content,
+          sha,
+          "committer.name": gitUser,
+          "committer.email": gitMail,
+          "author.name": gitUser,
+          "author.email": gitMail,
+        })
+        .then((result) => {
+          resolve(result);
+        })
+        .catch((error) => {
+          resolve({ error });
+        });
+    } catch (error) {
+      resolve({ error });
+    }
+  });
+  return;
+}
+
+function upsertGitContent(path, contentBuffer) {
+  return new Promise((resolve) => {
+    getGitContent(path).then((content) => {
+      if (content.error) {
+        createOrupdateGitContent(path, contentBuffer).then((result) =>
+          resolve(result)
+        );
+      } else {
+        createOrupdateGitContent(path, contentBuffer, content.sha).then(
+          (result) => resolve(result)
+        );
+      }
+    });
+  });
+}
+
 function envIntElse(key, def) {
   const env = process.env[key];
   if (env === undefined) return def;
@@ -72,5 +122,6 @@ module.exports = {
   sendJson,
   sendModule,
   getGitContent,
+  upsertGitContent,
   init,
 };
