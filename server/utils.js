@@ -5,9 +5,39 @@ const { Octokit, App } = require("octokit");
 
 const octokit = new Octokit({ auth: process.env.EXPRESSMIN_GITHUB_TOKEN });
 
-octokit.rest.users.getAuthenticated().then((account) => {
-  console.log(account.data.login);
-});
+let gitUser = "browsercapturesalt";
+const gitRepo = "blobs" || process.env.BLOBS_REPO;
+
+function init() {
+  return new Promise((resolve) => {
+    octokit.rest.users.getAuthenticated().then((account) => {
+      gitUser = account.data.login;
+      console.log({ gitUser });
+
+      resolve(true);
+    });
+  });
+}
+
+function getGitContent(path) {
+  return new Promise((resolve) => {
+    octokit.rest.repos
+      .getContent({
+        owner: gitUser,
+        repo: gitRepo,
+        path,
+      })
+      .then((content) => {
+        resolve({
+          content: Buffer.from(content.data.content, "base64").toString(
+            "utf-8"
+          ),
+          sha: content.data.sha,
+        });
+      });
+  });
+  return;
+}
 
 function envIntElse(key, def) {
   const env = process.env[key];
@@ -34,4 +64,6 @@ module.exports = {
   sendView,
   sendJson,
   sendModule,
+  getGitContent,
+  init,
 };

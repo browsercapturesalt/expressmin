@@ -31,6 +31,14 @@ app.get("/utils.js", (req, res) => {
   utils.sendView(res, "utils.js");
 });
 
-app.listen(PORT, () => {
-  console.log(`${APP_NAME} listening at ${PORT}`);
+utils.init().then((utilsInitOk) => {
+  console.log({ utilsInitOk });
+
+  app.listen(PORT, () => {
+    console.log(`${APP_NAME} listening at ${PORT}`);
+  });
+
+  utils.getGitContent("/README.md").then((content) => {
+    console.log("blobs README.md", content);
+  });
 });
