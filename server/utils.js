@@ -1,6 +1,14 @@
 const res = require("express/lib/response");
 const path = require("path");
 
+const { Octokit, App } = require("octokit");
+
+const octokit = new Octokit({ auth: process.env.EXPRESSMIN_GITHUB_TOKEN });
+
+octokit.rest.users.getAuthenticated().then((account) => {
+  console.log(account.data.login);
+});
+
 function envIntElse(key, def) {
   const env = process.env[key];
   if (env === undefined) return def;
