@@ -21,20 +21,27 @@ function init() {
 
 function getGitContent(path) {
   return new Promise((resolve) => {
-    octokit.rest.repos
-      .getContent({
-        owner: gitUser,
-        repo: gitRepo,
-        path,
-      })
-      .then((content) => {
-        resolve({
-          content: Buffer.from(content.data.content, "base64").toString(
-            "utf-8"
-          ),
-          sha: content.data.sha,
+    try {
+      octokit.rest.repos
+        .getContent({
+          owner: gitUser,
+          repo: gitRepo,
+          path,
+        })
+        .then((content) => {
+          resolve({
+            content: Buffer.from(content.data.content, "base64").toString(
+              "utf-8"
+            ),
+            sha: content.data.sha,
+          });
+        })
+        .catch((error) => {
+          resolve({ error });
         });
-      });
+    } catch (error) {
+      resolve({ error });
+    }
   });
   return;
 }
