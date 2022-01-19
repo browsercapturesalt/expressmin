@@ -1,0 +1,16 @@
+<script src="/vue.js"></script>
+<script src="/utils.js"></script>
+
+<div id="app">{{ welcome }}</div>
+
+<script>
+  Vue.createApp({
+    data() {
+      return {
+        welcome: "Welcome to Express Min !",
+      };
+    },
+  }).mount("#app");
+
+  hotReload();
+</script>

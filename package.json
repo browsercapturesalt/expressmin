@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "pretty": "prettier -w server/server.js  server/utils.js views/index.html views/utils.js",
+    "serve": "nodemon --exec bash startserver.sh"
+  },
   "dependencies": {
     "express": "^4.17.2",
     "nodemon": "^2.0.15",
