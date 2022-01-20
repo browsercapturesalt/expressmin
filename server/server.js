@@ -49,4 +49,8 @@ utils.init().then((utilsInitOk) => {
   /*const enc = utils.encrypt("Hello World!", "utf8")
   const dec = utils.decrypt(enc)
   console.log(enc, dec)*/
+
+  //utils.deleteRepo("blobs").then(result => console.log(result))
+
+  //utils.createRepo("blobs").then(result => console.log(result))
 });

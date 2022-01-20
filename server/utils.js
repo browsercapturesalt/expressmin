@@ -183,6 +183,21 @@ function upsertGitContentJsonEnc(path, blob) {
   return upsertGitContentEnc(path, Buffer.from(JSON.stringify(blob)));
 }
 
+function createRepo(name, description) {
+  return octokit.rest.repos.createForAuthenticatedUser({
+    name,
+    description,
+    auto_init: true,
+  });
+}
+
+function deleteRepo(name) {
+  return octokit.rest.repos.delete({
+    owner: gitUser,
+    repo: name,
+  });
+}
+
 function sendView(res, name) {
   res.sendFile(path.join(__dirname, "..", "views", name));
 }
@@ -209,4 +224,6 @@ module.exports = {
   init,
   encrypt,
   decrypt,
+  createRepo,
+  deleteRepo,
 };
