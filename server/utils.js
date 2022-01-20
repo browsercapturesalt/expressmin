@@ -34,8 +34,7 @@ const secret = process.env.EXPRESSMIN_SECRET_KEY || gitToken;
 Buffer.from(secret, "utf8").copy(secretKey);
 const encryptEncoding = "base64";
 
-function encrypt(content, inputEncodingOpt) {
-  const inputEncoding = inputEncodingOpt || "utf8";
+function encrypt(content, inputEncoding) {
   const outputEncoding = encryptEncoding;
   const iv = crypto.randomBytes(ivLength);
 
@@ -45,12 +44,15 @@ function encrypt(content, inputEncodingOpt) {
     cipher.update(content, inputEncoding, outputEncoding) +
     cipher.final(outputEncoding);
 
-  return iv.toString(outputEncoding) + " " + encrypted;
+  const ivEncB64 = iv.toString(outputEncoding) + " " + encrypted;
+
+  console.log({ ivEncB64 });
+
+  return ivEncB64;
 }
 
-function decrypt(content, outputEncodingOpt) {
+function decrypt(content, outputEncoding) {
   const inputEncoding = encryptEncoding;
-  const outputEncoding = outputEncodingOpt || "utf8";
 
   const [ivB64, encB64] = content.split(" ");
 
@@ -86,9 +88,7 @@ function getGitContent(path) {
         })
         .then((content) => {
           resolve({
-            content: Buffer.from(content.data.content, "base64").toString(
-              "utf-8"
-            ),
+            content: Buffer.from(content.data.content, "base64"),
             sha: content.data.sha,
           });
         })
@@ -149,6 +149,40 @@ function upsertGitContent(path, contentBuffer) {
   });
 }
 
+function getGitContentDec(path) {
+  return new Promise((resolve) => {
+    getGitContent(path).then((result) => {
+      if (result.error) {
+        resolve(result);
+      } else {
+        result.content = decrypt(result.content.toString());
+        resolve(result);
+      }
+    });
+  });
+}
+
+function getGitContentJsonDec(path) {
+  return new Promise((resolve) => {
+    getGitContentDec(path).then((result) => {
+      if (result.error) {
+        resolve(result);
+      } else {
+        result.content = JSON.parse(result.content.toString());
+        resolve(result);
+      }
+    });
+  });
+}
+
+function upsertGitContentEnc(path, contentBuffer) {
+  return upsertGitContent(path, Buffer.from(encrypt(contentBuffer)));
+}
+
+function upsertGitContentJsonEnc(path, blob) {
+  return upsertGitContentEnc(path, Buffer.from(JSON.stringify(blob)));
+}
+
 function sendView(res, name) {
   res.sendFile(path.join(__dirname, "..", "views", name));
 }
@@ -167,7 +201,11 @@ module.exports = {
   sendJson,
   sendModule,
   getGitContent,
+  getGitContentDec,
+  getGitContentJsonDec,
   upsertGitContent,
+  upsertGitContentEnc,
+  upsertGitContentJsonEnc,
   init,
   encrypt,
   decrypt,

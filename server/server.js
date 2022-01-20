@@ -38,11 +38,15 @@ utils.init().then((utilsInitOk) => {
     console.log(`${APP_NAME} listening at ${PORT}`);
   });
 
-  /*utils.upsertGitContent("test", Buffer.from("test update")).then((result) => {
-    console.log(result);
+  /*utils.upsertGitContentJsonEnc("test", {"test": true}).then((result) => {
+    console.log("upsert result", result);
+
+    utils.getGitContentJsonDec("test").then((result) => {
+      console.log("get result", result, result.content);
+    });
   });*/
 
-  /*const enc = utils.encrypt("Hello World!")
+  /*const enc = utils.encrypt("Hello World!", "utf8")
   const dec = utils.decrypt(enc)
   console.log(enc, dec)*/
 });
