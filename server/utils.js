@@ -1,15 +1,68 @@
 const res = require("express/lib/response");
 const path = require("path");
+const crypto = require("crypto");
 
 const { Octokit, App } = require("octokit");
 const { resolve } = require("path");
+const { contentType } = require("express/lib/response");
+const { useCssVars } = require("vue");
+const { isBigInt64Array } = require("util/types");
 
-const octokit = new Octokit({ auth: process.env.EXPRESSMIN_GITHUB_TOKEN });
+function envIntElse(key, def) {
+  const env = process.env[key];
+  if (env === undefined) return def;
+  const parsed = parseInt(env);
+  if (isNaN(parsed)) return def;
+  return parsed;
+}
+
+const gitToken = process.env.EXPRESSMIN_GITHUB_TOKEN;
+
+const octokit = new Octokit({ auth: gitToken });
 
 let gitUser = "browsercapturesalt";
 const gitMail =
   "browsercaptures@googlemail.com" || process.env.EXPRESSMIN_GIT_MAIL;
 const gitRepo = "blobs" || process.env.EXPRESSMIN_BLOBS_REPO;
+
+const cryptoAlgorithm =
+  process.env.EXPRESSMIN_CRYPTO_ALGORITHM || "aes-256-cbc";
+const ivLength = envIntElse("EXPRESSMIN_IV_LENGTH", 16);
+const secretKeyLength = envIntElse("EXPRESSMIN_SECRET_KEY_LENGTH", 32);
+const secretKey = Buffer.alloc(secretKeyLength);
+const secret = process.env.EXPRESSMIN_SECRET_KEY || gitToken;
+Buffer.from(secret, "utf8").copy(secretKey);
+const encryptEncoding = "base64";
+
+function encrypt(content, inputEncodingOpt) {
+  const inputEncoding = inputEncodingOpt || "utf8";
+  const outputEncoding = encryptEncoding;
+  const iv = crypto.randomBytes(ivLength);
+
+  const cipher = crypto.createCipheriv(cryptoAlgorithm, secretKey, iv);
+
+  const encrypted =
+    cipher.update(content, inputEncoding, outputEncoding) +
+    cipher.final(outputEncoding);
+
+  return iv.toString(outputEncoding) + " " + encrypted;
+}
+
+function decrypt(content, outputEncodingOpt) {
+  const inputEncoding = encryptEncoding;
+  const outputEncoding = outputEncodingOpt || "utf8";
+
+  const [ivB64, encB64] = content.split(" ");
+
+  const iv = Buffer.from(ivB64, inputEncoding);
+
+  const decipher = crypto.createDecipheriv(cryptoAlgorithm, secretKey, iv);
+
+  const decrypted =
+    decipher.update(encB64, inputEncoding, outputEncoding) + decipher.final();
+
+  return decrypted;
+}
 
 function init() {
   return new Promise((resolve) => {
@@ -96,14 +149,6 @@ function upsertGitContent(path, contentBuffer) {
   });
 }
 
-function envIntElse(key, def) {
-  const env = process.env[key];
-  if (env === undefined) return def;
-  const parsed = parseInt(env);
-  if (isNaN(parsed)) return def;
-  return parsed;
-}
-
 function sendView(res, name) {
   res.sendFile(path.join(__dirname, "..", "views", name));
 }
@@ -124,4 +169,6 @@ module.exports = {
   getGitContent,
   upsertGitContent,
   init,
+  encrypt,
+  decrypt,
 };

@@ -41,4 +41,8 @@ utils.init().then((utilsInitOk) => {
   /*utils.upsertGitContent("test", Buffer.from("test update")).then((result) => {
     console.log(result);
   });*/
+
+  /*const enc = utils.encrypt("Hello World!")
+  const dec = utils.decrypt(enc)
+  console.log(enc, dec)*/
 });
